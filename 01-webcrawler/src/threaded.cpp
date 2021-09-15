@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
   // write links to an output file
   std::ofstream out(output_path);
   for (link_data link : links) {
-    out << link.depth << " " << link.url << std::endl;
+    out << link.url << std::endl;
   }
   out.close();
 
