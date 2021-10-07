@@ -9,6 +9,7 @@ After installing these prerequisites, you should be able to compile the code pro
 git clone git@github.com:BradMcDanel/cps376-assignments.git
 cd cps376-assignments/02-image-processing/
 ```
+Note: if you already cloned the repository for the last assignment, you should be able to simply do `git pull` instead of the two above lines.
 
 Now, we need to set up a `build/` directory for CMake:
 
