@@ -3,7 +3,7 @@
 ### Getting Started
 There are two requirements before getting started on this project: a C++11 compiler (likely the case for any computer < 5 years old) and [CMake](https://cmake.org/download/) (3.0 or greater). Follow the instructions on the website to install CMake. Afterwards, when opening a new terminal, typing cmake should prompt you with a usage message.
 
-Due to using linux socket library, **this code will likely not compile on Windows.** Please use a lab machine, or VM in your windows machine. You may also try to get (https://docs.microsoft.com/en-us/windows/wsl/)[Windows Subsystem for Linux] working, but I make not guarentees it will work. The code should work fine on Mac OSX.
+Due to using linux socket library, **this code will likely not compile on Windows.** Please use a lab machine, or VM in your windows machine. You may also try to get [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) working, but I make not guarentees it will work. The code should work fine on Mac OSX.
 
 After installing these prerequisites, you should be able to compile the code provided in this repositoy. First, you need to clone this to your machine:
 
