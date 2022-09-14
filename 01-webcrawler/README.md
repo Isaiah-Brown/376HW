@@ -31,7 +31,7 @@ make
 Note that neither of these executables actually do very much - that is your job!
 
 ### Next Steps
-* Click around my [2008 Wikipedia](http://66.175.215.237/) mirror to get a sense of what the content you will be crawling looks like
+* Click around my [2008 Wikipedia](http://139.162.185.240/) mirror to get a sense of what the content you will be crawling looks like
 * Carefully read through the assignment (and ask me questions as they come up!)
 * Get the serial version working 100% before starting the threaded version
 * After finishing the threaded version, make sure that the output matches the serial version for several pages
