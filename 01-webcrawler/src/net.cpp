@@ -19,7 +19,7 @@
 
 int socket_connect() {
   // These can stay hardcoded
-  std::string host = "66.175.215.237";
+  std::string host = "139.162.185.240";
   int port = 80;
 
   struct sockaddr_in addr;
