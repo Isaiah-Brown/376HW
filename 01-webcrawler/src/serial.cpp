@@ -19,51 +19,43 @@ std::vector<link_data> crawl(std::string url, int depth) {
   std::vector<link_data> links;
 
   std::string response = socket_send(url);
-  std::cout << response << "******YURRR******" << std::endl;
 
-  std::string startOfLink = "<a href=\"";
-  std::string currStart= "";
+  std::string href = "<a href=\"";
+  std::string startOfLink = "articles/";
 
-  std::string startOfWiki = "articles/";
-  std::string currLink = "";
+  size_t idx = 0;
 
-  //std::cout << startOfLink.length() << " " + startOfLink + "*" << std::endl;
-  
-
-  for (size_t i = 0; i < response.length(); i++){
-    if (response[i] == '<') {
-      for (size_t j = 0; j < startOfLink.length(); j++){
-        currStart += response[i + j];
+  while (idx < response.length()){
+    if (response[idx] == '<') {
+      size_t linkIdx = 0;
+      std::string currHref= "";
+      while (linkIdx < href.length()){
+        currHref += response[idx + linkIdx];
+        linkIdx += 1;
       }
-      //std::cout << currStart << "*****" << std::endl;
-      if (currStart == startOfLink){
-        std::cout << currStart << std::endl;
-        size_t linkIdx = 10;
-        while(response[i + linkIdx] == '.'  || response[i + linkIdx] == '/') {
+      if (currHref == href){
+        while(response[idx + linkIdx] == '.'  || response[idx + linkIdx] == '/') {
           linkIdx += 1;
         }
-        while(currLink.length() < startOfWiki.length()){
-          currLink += response[i + linkIdx];
-          std::cout << currLink << std::endl;
+        std::string currLink = "";
+        while(currLink.length() < startOfLink.length()){
+          currLink += response[idx + linkIdx];
           linkIdx += 1;
         }
-        std::cout << currLink << std::endl;
-        if (currLink == startOfWiki){
-          char quote = '\"';
-          while(response[i + linkIdx] != quote) {
-            currLink += response[i + linkIdx];
+        if (currLink == startOfLink){
+          while(response[idx + linkIdx] != '\"') {
+            currLink += response[idx + linkIdx];
             linkIdx += 1;
           }
-          std::cout << currLink << std::endl;
           link_data data;
           data.url = currLink;
           data.depth = 0;
           links.push_back(data);
         }
+        idx = linkIdx + idx;
       }
-      currLink = "";
-      currStart= "";
     }
+    idx += 1;
   }
 
 
@@ -123,7 +115,7 @@ int main(int argc, char* argv[]) {
   std::ofstream out(output_path);
   int length = 0;
   for (link_data link : links) {
-    out << link.url << "********" << std::endl;
+    out << link.url << std::endl;
     length += 1;
 
   }
