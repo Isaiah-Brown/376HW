@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
  
 #include "net.h"
 
@@ -17,45 +18,73 @@ struct link_data {
 
 std::vector<link_data> crawl(std::string url, int depth) {
   std::vector<link_data> links;
+  std::queue<link_data> queue;
 
   std::string response = socket_send(url);
 
   std::string href = "<a href=\"";
   std::string startOfLink = "articles/";
 
-  size_t idx = 0;
+  link_data head;
+  head.url = url;
+  head.depth = 0;
+  queue.push(head);
 
-  while (idx < response.length()){
-    if (response[idx] == '<') {
-      size_t linkIdx = 0;
-      std::string currHref= "";
-      while (linkIdx < href.length()){
-        currHref += response[idx + linkIdx];
-        linkIdx += 1;
-      }
-      if (currHref == href){
-        while(response[idx + linkIdx] == '.'  || response[idx + linkIdx] == '/') {
-          linkIdx += 1;
-        }
-        std::string currLink = "";
-        while(currLink.length() < startOfLink.length()){
-          currLink += response[idx + linkIdx];
-          linkIdx += 1;
-        }
-        if (currLink == startOfLink){
-          while(response[idx + linkIdx] != '\"') {
-            currLink += response[idx + linkIdx];
-            linkIdx += 1;
-          }
-          link_data data;
-          data.url = currLink;
-          data.depth = 0;
-          links.push_back(data);
-        }
-        idx = linkIdx + idx;
+  while(!queue.empty()) {
+
+    
+    link_data data = queue.front();
+
+    queue.pop();
+    bool original = true;
+
+    for (link_data link: links) {
+      if (data.url == link.url) {
+        original = false;
       }
     }
-    idx += 1;
+
+    links.push_back(data);
+
+    if (original == true && data.depth == depth) {
+      original = false;
+    }
+
+    if (original) {
+      size_t idx = 0;
+      while (idx < response.length()){
+        if (response[idx] == '<') {
+          size_t linkIdx = 0;
+          std::string currHref= "";
+          while (linkIdx < href.length()){
+            currHref += response[idx + linkIdx];
+            linkIdx += 1;
+          }
+          if (currHref == href){
+            while(response[idx + linkIdx] == '.'  || response[idx + linkIdx] == '/') {
+              linkIdx += 1;
+            }
+            std::string currLink = "";
+            while(currLink.length() < startOfLink.length()){
+              currLink += response[idx + linkIdx];
+              linkIdx += 1;
+            }
+            if (currLink == startOfLink){
+              while(response[idx + linkIdx] != '\"') {
+                currLink += response[idx + linkIdx];
+                linkIdx += 1;
+              }
+              link_data innerLink;
+              innerLink.url = currLink;
+              innerLink.depth = data.depth + 1;
+              queue.push(innerLink);
+            }
+            idx = linkIdx + idx;
+          }
+        }
+        idx += 1;
+      }
+    }
   }
 
 
