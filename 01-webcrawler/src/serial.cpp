@@ -20,8 +20,6 @@ std::vector<link_data> crawl(std::string url, int depth) {
   std::vector<link_data> links;
   std::queue<link_data> queue;
 
-  std::string response = socket_send(url);
-
   std::string href = "<a href=\"";
   std::string startOfLink = "articles/";
 
@@ -32,9 +30,8 @@ std::vector<link_data> crawl(std::string url, int depth) {
 
   while(!queue.empty()) {
 
-    
+  
     link_data data = queue.front();
-
     queue.pop();
     bool original = true;
 
@@ -44,13 +41,13 @@ std::vector<link_data> crawl(std::string url, int depth) {
       }
     }
 
-    links.push_back(data);
-
-    if (original == true && data.depth == depth) {
-      original = false;
+    if(original) {
+      links.push_back(data);
+      std::cout << links.size() << std::endl;
     }
 
-    if (original) {
+    if (original && data.depth < depth) {
+      std::string response = socket_send(data.url);
       size_t idx = 0;
       while (idx < response.length()){
         if (response[idx] == '<') {
@@ -85,6 +82,7 @@ std::vector<link_data> crawl(std::string url, int depth) {
         idx += 1;
       }
     }
+
   }
 
 
