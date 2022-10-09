@@ -16,66 +16,98 @@ struct link_data {
   int depth;        // depth of the link (e.g., 0 for the root page)
 };
 
+bool not_busy(std::vector<bool> &busy){
+  bool answer = true;
+  for (bool t : busy) {
+    if (t) {
+      answer = false;
+    }
+  }
+  return answer;
+}
 
-void crawlHelper(std::queue<link_data> &queue, std::vector<link_data> &links, std::vector<bool> &busy, std::mutex q_mutex, int id, int depth) {
 
-  
-  std::string response = socket_send(queue.front().url);
+void crawlHelper(std::queue<link_data> &queue, std::vector<link_data> &links, std::vector<bool> &busy, std::mutex& q_mutex, int id, int depth) {
 
   std::string href = "<a href=\"";
   std::string startOfLink = "articles/";
-  while(!queue.empty()) {
-    link_data data = queue.front();
 
-    queue.pop();
-    bool original = true;
+  bool running = true;
 
-    for (link_data link: links) {
-      if (data.url == link.url) {
-        original = false;
-      }
-    }
+  while(running) {
+    std::cout << queue.size() << std::endl;
+    std::cout << id << std::endl;
+    q_mutex.lock();
+    if (queue.empty() && not_busy(busy)) {
+      q_mutex.unlock();
+      running = false;
+      break;
+    } else if (!queue.empty()) {
+      while(!queue.empty()) {
+        link_data data = queue.front();
+        queue.pop();
+        busy[id] = true;q_mutex.lock();
+        q_mutex.unlock();
+        bool original = true;
 
-    links.push_back(data);
-
-    if (original && data.depth < depth) {
-      size_t idx = 0;
-      while (idx < response.length()){
-        if (response[idx] == '<') {
-          size_t linkIdx = 0;
-          std::string currHref= "";
-          while (linkIdx < href.length()){
-            currHref += response[idx + linkIdx];
-            linkIdx += 1;
-          }
-          if (currHref == href){
-            while(response[idx + linkIdx] == '.'  || response[idx + linkIdx] == '/') {
-              linkIdx += 1;
-            }
-            std::string currLink = "";
-            while(currLink.length() < startOfLink.length()){
-              currLink += response[idx + linkIdx];
-              linkIdx += 1;
-            }
-            if (currLink == startOfLink){
-              while(response[idx + linkIdx] != '\"') {
-                currLink += response[idx + linkIdx];
-                linkIdx += 1;
-              }
-              link_data innerLink;
-              innerLink.url = currLink;
-              innerLink.depth = data.depth + 1;
-              queue.push(innerLink);
-            }
-            idx = linkIdx + idx;
+        for (link_data link: links) {
+          if (data.url == link.url) {
+            original = false;
           }
         }
-        idx += 1;
-      }
-    }
-    //write threads here
-  }
 
+        if(original) {
+          q_mutex.lock();
+          links.push_back(data);
+          q_mutex.unlock();
+          //std::cout << links.size() << std::endl;
+        }
+
+        if (original && data.depth < depth) {
+          std::string response = socket_send(data.url);
+          size_t idx = 0;
+          while (idx < response.length()){
+            if (response[idx] == '<') {
+              size_t linkIdx = 0;
+              std::string currHref= "";
+              while (linkIdx < href.length()){
+                currHref += response[idx + linkIdx];
+                linkIdx += 1;
+              }
+              if (currHref == href){
+                while(response[idx + linkIdx] == '.'  || response[idx + linkIdx] == '/') {
+                  linkIdx += 1;
+                }
+                std::string currLink = "";
+                while(currLink.length() < startOfLink.length()){
+                  currLink += response[idx + linkIdx];
+                  linkIdx += 1;
+                }
+                if (currLink == startOfLink){
+                  while(response[idx + linkIdx] != '\"') {
+                    currLink += response[idx + linkIdx];
+                    linkIdx += 1;
+                  }
+                  link_data innerLink;
+                  innerLink.url = currLink;
+                  innerLink.depth = data.depth + 1;
+                  q_mutex.lock();
+                  queue.push(innerLink);
+                  q_mutex.unlock();
+                }
+                idx = linkIdx + idx;
+              }
+            }
+            idx += 1;
+          }
+        }
+
+      }
+      busy[id] = false;
+    } else {
+      q_mutex.unlock();
+    }
+  }
 
 }
 
@@ -86,30 +118,25 @@ std::vector<link_data> crawl(std::string url, int depth, int threads) {
   std::vector<link_data> links;
   std::queue<link_data> queue;
   std::mutex q_mutex;
-  std::mutex l_mutex;
   std::vector<bool> busy(threads, false);
+  std::vector<std::thread> threads_v;
 
   link_data head;
   head.url = url;
   head.depth = 0;
   queue.push(head);
 
-  /*
-  for(size_t i = 0; i < threads; i++) {
+  for(int i = 0; i < threads; i++) {
     int id = i;
-    std::thread t(crawlHelper, std::ref(queue), std::ref(links), std::ref(busy), std::ref(q_mutex), std::ref(id), std::ref(depth));
+    std::thread t(crawlHelper, std::ref(queue), std::ref(links), std::ref(busy), std::ref(q_mutex), id, depth);
+    threads_v.push_back(std::move(t));
   }
-  */
-  
-  
 
-  // TODO: implement
-  // remove the following lines (these prevent a compiler warning)
-  //(void)url;
-  //(void)depth;
-  //(void)threads;
-  // end of TODO
+  for (auto &t : threads_v) {
+    t.join();
+  }
 
+  
   return links;
 }
 

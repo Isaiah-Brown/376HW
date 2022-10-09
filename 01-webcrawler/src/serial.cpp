@@ -30,12 +30,11 @@ std::vector<link_data> crawl(std::string url, int depth) {
 
   while(!queue.empty()) {
 
-  
     link_data data = queue.front();
     queue.pop();
     bool original = true;
 
-    for (link_data link: links) {
+    for (link_data link: links) { //make sure there are no duplicates
       if (data.url == link.url) {
         original = false;
       }
@@ -43,10 +42,9 @@ std::vector<link_data> crawl(std::string url, int depth) {
 
     if(original) {
       links.push_back(data);
-      std::cout << links.size() << std::endl;
     }
 
-    if (original && data.depth < depth) {
+    if (original && data.depth < depth) {    //this means that socket_send must be called
       std::string response = socket_send(data.url);
       size_t idx = 0;
       while (idx < response.length()){
@@ -57,7 +55,7 @@ std::vector<link_data> crawl(std::string url, int depth) {
             currHref += response[idx + linkIdx];
             linkIdx += 1;
           }
-          if (currHref == href){
+          if (currHref == href){   // "<a href=" was found, this means a link is starting
             while(response[idx + linkIdx] == '.'  || response[idx + linkIdx] == '/') {
               linkIdx += 1;
             }
@@ -66,7 +64,7 @@ std::vector<link_data> crawl(std::string url, int depth) {
               currLink += response[idx + linkIdx];
               linkIdx += 1;
             }
-            if (currLink == startOfLink){
+            if (currLink == startOfLink){    //the begining of the link is "articles/ this means it is a wiki link
               while(response[idx + linkIdx] != '\"') {
                 currLink += response[idx + linkIdx];
                 linkIdx += 1;
@@ -74,7 +72,7 @@ std::vector<link_data> crawl(std::string url, int depth) {
               link_data innerLink;
               innerLink.url = currLink;
               innerLink.depth = data.depth + 1;
-              queue.push(innerLink);
+              queue.push(innerLink); //place link in queue
             }
             idx = linkIdx + idx;
           }
@@ -85,21 +83,11 @@ std::vector<link_data> crawl(std::string url, int depth) {
 
   }
 
-
-
-  
-  // TODO: implement
-  // remove the following lines (these prevent a compiler warning)
-  //(void)url;
-  //(void)depth;
-  // end of TODO
-
   return links;
 }
 
 int main(int argc, char* argv[]) {
   // For argument parsing
-  std::cout << "here" << std::endl;
   extern char* optarg;
   int opt;
   bool uflag = false, oflag = false;
@@ -146,10 +134,8 @@ int main(int argc, char* argv[]) {
     length += 1;
 
   }
-  std::cout << "length of links: " << length << std::endl;
+  
   out.close();
 
-  
-  std::cout << "finsished" << std::endl;
   return 0;
 }
