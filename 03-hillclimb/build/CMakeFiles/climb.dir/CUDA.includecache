@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/utils.h
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/src/climb.cu
+stdio.h
+-
+stdlib.h
+-
+curand.h
+-
+curand_kernel.h
+-
+utils.h
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/src/utils.h
+

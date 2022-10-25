@@ -1,0 +1,16 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/src/rand.cu
+stdio.h
+-
+curand.h
+-
+curand_kernel.h
+-
+

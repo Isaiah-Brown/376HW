@@ -1,0 +1,4 @@
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/build/CMakeFiles/rebuild_cache.dir
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/build/CMakeFiles/edit_cache.dir
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/build/CMakeFiles/climb.dir
+/cps/home/ibrown/Desktop/cps376/HW/376HW/03-hillclimb/build/CMakeFiles/rand.dir
