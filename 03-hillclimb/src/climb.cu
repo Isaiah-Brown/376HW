@@ -4,8 +4,8 @@
 #include <curand_kernel.h>
 #include "utils.h"
 
-#define N_THREADS 1024
-#define N_BLOCKS 16
+#define N_THREADS 1
+#define N_BLOCKS 1
 
 /*** GPU functions ***/
 __global__ void init_rand_kernel(curandState *state) {
@@ -15,6 +15,7 @@ __global__ void init_rand_kernel(curandState *state) {
 __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int* by,
                                    int steps, curandState *state) {
   int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  printf("%d\n", tid);
   //TODO: implement random walk!
 }
 
@@ -67,13 +68,23 @@ float random_walk(float* map, int rows, int cols, int steps) {
   }
   */
 
-  cudaMalloc(&d_map, N_BLOCKS * N_THREADS * sizeof(float));
-  cudaMemcpy(d_map, map, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyHostToDevice);
+  bx = (int*)malloc(N_BLOCKS * N_THREADS * sizeof(float));
+  by = (int*)malloc(N_BLOCKS * N_THREADS * sizeof(float));
+
+  cudaMalloc(&d_bx, N_BLOCKS * N_THREADS * sizeof(float));
+  cudaMalloc(&d_by, N_BLOCKS * N_THREADS * sizeof(float));
+
+  
+
+  cudaMalloc(&d_map, rows * cols * sizeof(float));
+  cudaMemcpy(d_map, map, rows * cols * sizeof(float), cudaMemcpyHostToDevice);
 
   random_walk_kernel<<<N_BLOCKS, N_THREADS>>>(d_map, rows, cols, d_bx, d_by, steps, d_state);
 
-  cudaMemcpy(bx, d_bx, sizeof(float), cudaMemcpyDeviceToHost);
-  cudaMemcpy(by, d_by, sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(map, d_map, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyDeviceToHost);
+
+  cudaMemcpy(bx, d_bx, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(by, d_by, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyDeviceToHost);
 
   // After kernel call:
   // Need to copy data back to CPU and find max value
@@ -83,9 +94,9 @@ float random_walk(float* map, int rows, int cols, int steps) {
   float max_val = 0;
 
   // Finally: free used GPU and CPU memory
-  cudaFree(d_state);
-  cudaFree(d_map);
-  free(map);
+  //cudaFree(d_state);
+  //cudaFree(d_map);
+  //free(map);
   return max_val;
 }
 
@@ -103,7 +114,7 @@ int main(int argc, char** argv) {
   float *map;
   int rows, cols;
   read_bin(argv[1], &map, &rows, &cols);
-
+  printf("%d %d\n", rows, cols);
 
 
   // As a starting point, try to get it working with a single steps value
