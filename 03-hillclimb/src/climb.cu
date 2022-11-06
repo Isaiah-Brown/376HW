@@ -10,9 +10,8 @@
 /*** GPU functions ***/
 __global__ void init_rand_kernel(curandState *state) {
  int idx = blockIdx.x * blockDim.x + threadIdx.x;
- curand_init(0, idx, 0, &state[idx]);
+ curand_init(0, idx, 0, &state[idx]);        
 }
-
 __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int* by,
                                    int steps, curandState *state) {
   int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -49,16 +48,44 @@ float random_walk(float* map, int rows, int cols, int steps) {
   // Before kernel call:
   // Need to allocate memory for above variables and copy data to GPU
 
+  /*
+  float max = 0;
+  float min = 0;
+  for(int i = 0; i < rows * cols; i++) {
+      if (map[i] > max) {
+        max = map[i];
+        printf("%f\n", max);
+      }
+      if (map[i] < min) {
+        min = map[i];
+        printf("%f\n", min);
+      }
+      if( i % 2048 == 0) {
+        printf("%d\n", i);
+      }
+      
+  }
+  */
+
+  cudaMalloc(&d_map, N_BLOCKS * N_THREADS * sizeof(float));
+  cudaMemcpy(d_map, map, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyHostToDevice);
+
   random_walk_kernel<<<N_BLOCKS, N_THREADS>>>(d_map, rows, cols, d_bx, d_by, steps, d_state);
+
+  cudaMemcpy(bx, d_bx, sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(by, d_by, sizeof(float), cudaMemcpyDeviceToHost);
 
   // After kernel call:
   // Need to copy data back to CPU and find max value
 
+  
+
   float max_val = 0;
 
   // Finally: free used GPU and CPU memory
-
-
+  cudaFree(d_state);
+  cudaFree(d_map);
+  free(map);
   return max_val;
 }
 
@@ -77,11 +104,13 @@ int main(int argc, char** argv) {
   int rows, cols;
   read_bin(argv[1], &map, &rows, &cols);
 
-  printf("%d %d\n", rows, cols);
+
 
   // As a starting point, try to get it working with a single steps value
   int steps = 10;
   float max_val = random_walk(map, rows, cols, steps);
+  
+  printf("%d %d\n", rows, cols);
   printf("Random walk max value: %f\n", max_val);
 
   return 0;
