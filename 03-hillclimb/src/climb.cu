@@ -25,7 +25,13 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
   //TODO: implement local max!
 }
 
-__global__ void local_()/
+__global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx,
+                                         int* by, int steps, curandState *state) {
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  //TODO: implement local max with restarts!
+}
+
+/*** CPU functions ***/
 curandState* init_rand() {
   curandState *d_state;
   cudaMalloc(&d_state, N_BLOCKS * N_THREADS * sizeof(curandState));
@@ -42,14 +48,6 @@ float random_walk(float* map, int rows, int cols, int steps) {
 
   // Before kernel call:
   // Need to allocate memory for above variables and copy data to GPU
-  bx = (float *)malloc(sizeof(int) * rows)
-  by = (float *)malloc(sizeof(int) * cols)
-  cudaMalloc(&d_bx, sizeof(int) * rows)
-  cudaMalloc(&d_by, sizeof(int) * cols)
-  cudaMalloc(&d_map, sizeof(int) * rows * cols)
-
-  cudaMemcpy(d_bx, bx, sizeof(int) * rows, cudaMemcpyHostToDevice)
-  cudaMemcpy(d_by, by, sizeof(int) * cols, cudaMemcpyHostToDevice)
 
   random_walk_kernel<<<N_BLOCKS, N_THREADS>>>(d_map, rows, cols, d_bx, d_by, steps, d_state);
 
@@ -59,7 +57,6 @@ float random_walk(float* map, int rows, int cols, int steps) {
   float max_val = 0;
 
   // Finally: free used GPU and CPU memory
-  cudaFree(d_state);
 
 
   return max_val;
@@ -74,7 +71,10 @@ int main(int argc, char** argv) {
   if (argc != 2) {
     printf("Usage: %s <map_file> \n", argv[0]);
     return 1;
-  }()ls;
+  }
+
+  float *map;
+  int rows, cols;
   read_bin(argv[1], &map, &rows, &cols);
 
   printf("%d %d\n", rows, cols);
