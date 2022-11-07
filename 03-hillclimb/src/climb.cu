@@ -4,8 +4,8 @@
 #include <curand_kernel.h>
 #include "utils.h"
 
-#define N_THREADS 4
-#define N_BLOCKS 4
+#define N_THREADS 16
+#define N_BLOCKS 16
 
 /*** GPU functions ***/
 __global__ void init_rand_kernel(curandState *state) {
@@ -19,7 +19,7 @@ __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int*
   float start = curand_uniform(&state[tid]);
   int idx = start * rows * cols;
   int x = idx / cols;
-  int y = (idx - 1) % rows;
+  int y = (idx - 1) % cols;
 
   float max_height = map[idx];
   bx[tid] = x;
@@ -50,13 +50,9 @@ __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int*
       max_height = height;
       bx[tid] = x;
       by[tid] = y;
-      printf("Height %f\n", height);
     }
   }
-  //printf("end height %f\n", max_height);
-  
-  //printf("x %d\ny %d\n", x, y);
-  //printf("tid %d\nstart %d\n", tid, idx);
+ 
   //TODO: implement random walk!
 }
 
@@ -87,11 +83,7 @@ float random_walk(float* map, int rows, int cols, int steps) {
   int *d_bx, *d_by;
   float* d_map;
 
-  /*
-  for(int i = 0; i < N_THREADS; i++) {
-    printf("%", d_state[i]);
-  }
-  */
+
   // Before kernel call:
   // Need to allocate memory for above variables and copy data to GPU
 
@@ -122,14 +114,11 @@ float random_walk(float* map, int rows, int cols, int steps) {
   for(int i = 0; i < N_BLOCKS * N_THREADS; i++) {
     int x = bx[i];
     int y = by[i];
-    int idx = x * 6114 + y;
+    int idx = x * 6114 + y + 1;
     float height = map[idx];
     if (height > max_val) {
       max_val = height;
     }
-    printf("m %f\n", map[i]);
-    printf("x %d\n", bx[i]);
-    printf("y %d\n", by[i]);
   }
 
   // Finally: free used GPU and CPU memory
@@ -157,7 +146,7 @@ int main(int argc, char** argv) {
 
 
   // As a starting point, try to get it working with a single steps value
-  int steps = 20;
+  int steps = 1;
   float max_val = random_walk(map, rows, cols, steps);
   
   printf("%d %d\n", rows, cols);
