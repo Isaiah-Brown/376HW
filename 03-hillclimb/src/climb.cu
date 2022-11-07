@@ -79,13 +79,13 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
   float start = curand_uniform(&state[tid]);
   int idx = start * rows * cols;
   int x = idx / cols;
-  int y = (idx - 1) % cols;
+  int y = idx % cols;
 
   float max_height = map[idx];
   bx[tid] = x;
   by[tid] = y;
 
-  printf("%f\n", max_height);
+  //printf("%f\n", max_height);
   for(int i = 0; i < steps; i++) {
     //float randNum = curand_uniform(&state[tid]);
     //int randIdx = int(4 * randNum);
@@ -94,7 +94,7 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
 
     
     if (y != 0) {
-      int leftIdx = x * 6114 + y - 1;
+      int leftIdx = (x * 6114) + y - 1;
       left = map[leftIdx];
       //y = y - 1;
     } else {
@@ -110,18 +110,18 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
     }
        
      
-    if (y < 6113) {
-      int rightIdx = x * 6114 + y + 1;
-      top = map[rightIdx];
+    if (y != (cols -1)) {
+      int rightIdx = (x * 6114) + y + 1;
+      right = map[rightIdx];
       //y = y + 1;
       
     } else {
       right = -99;
     }
     
-    if (x < 2047) {
-      int bottomIdx = ((x + 1) * 6114) + y - 1;
-      top = map[bottomIdx];
+    if (x != (rows - 1)) {
+      int bottomIdx = ((x + 1) * 6114) + y;
+      bottom = map[bottomIdx];
       //x = x + 1;
     } else {
       bottom = -99;
@@ -144,7 +144,7 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
       max_height = currMax;
       bx[tid] = x;
       by[tid] = y;
-      printf("%f\n", max_height);
+      printf("max height %f\n", max_height);
     }
   }
  
@@ -244,7 +244,7 @@ float local_max(float* map, int rows, int cols, int steps){
   for(int i = 0; i < N_BLOCKS * N_THREADS; i++) {
     int x = bx[i];
     int y = by[i];
-    int idx = x * 6114 + y + 1;
+    int idx = x * 6114 + y;
     float height = map[idx];
     if (height > max_val) {
       max_val = height;
@@ -252,12 +252,12 @@ float local_max(float* map, int rows, int cols, int steps){
   }
 
   // Finally: free used GPU and CPU memory
-  //cudaFree(d_state);
-  //cudaFree(d_map);
-  //cudaFree(d_bx);
-  //cudaFree(d_by);
-  //free(bx);
-  //free(by);
+  cudaFree(d_state);
+  cudaFree(d_map);
+  cudaFree(d_bx);
+  cudaFree(d_by);
+  free(bx);
+  free(by);
   return max_val;
 }
 float local_max_restart(float* map, int rows, int cols, int steps);
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
   // As a starting point, try to get it working with a single steps value
   int steps = 1;
   while(steps <= 1024) {
-    float max_val = random_walk(map, rows, cols, steps);
+    float max_val = local_max(map, rows, cols, steps);
     //printf("%d %d\n", rows, cols);
     printf("Local Max steps: %d, max value: %f\n", steps, max_val);
     steps = steps * 2;
