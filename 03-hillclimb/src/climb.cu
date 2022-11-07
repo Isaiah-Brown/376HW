@@ -24,12 +24,11 @@ __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int*
   float max_height = map[idx];
   bx[tid] = x;
   by[tid] = y;
-  //printf("beggining height %f\n", max_height);
 
   for(int i = 0; i < steps; i++) {
     float randNum = curand_uniform(&state[tid]);
     int randIdx = int(4 * randNum);
-    //printf("here %d\n", randNum);
+  
     switch (randIdx) {
       case 0:
         if (y != 0) {
@@ -91,28 +90,21 @@ float random_walk(float* map, int rows, int cols, int steps) {
   int *d_bx, *d_by;
   float* d_map;
 
-
   // Before kernel call:
   // Need to allocate memory for above variables and copy data to GPU
 
-  
-  
-
   bx = (int*)malloc(N_BLOCKS * N_THREADS * sizeof(float));
   by = (int*)malloc(N_BLOCKS * N_THREADS * sizeof(float));
-
   cudaMalloc(&d_bx, N_BLOCKS * N_THREADS * sizeof(float));
   cudaMalloc(&d_by, N_BLOCKS * N_THREADS * sizeof(float));
 
   
-
   cudaMalloc(&d_map, rows * cols * sizeof(float));
   cudaMemcpy(d_map, map, rows * cols * sizeof(float), cudaMemcpyHostToDevice);
 
   random_walk_kernel<<<N_BLOCKS, N_THREADS>>>(d_map, rows, cols, d_bx, d_by, steps, d_state);
 
   cudaMemcpy(map, d_map, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyDeviceToHost);
-
   cudaMemcpy(bx, d_bx, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(by, d_by, N_BLOCKS * N_THREADS * sizeof(float), cudaMemcpyDeviceToHost);
 
@@ -132,11 +124,15 @@ float random_walk(float* map, int rows, int cols, int steps) {
   // Finally: free used GPU and CPU memory
   //cudaFree(d_state);
   //cudaFree(d_map);
+  //cudaFree(d_bx);
+  //cudaFree(d_by);
   //free(map);
+  //free(bx);
+  //free(by);
   return max_val;
 }
 
-// Work on these after finishing random walk
+// Work on these after finishing random walkif (y != 0)
 float local_max(float* map, int rows, int cols, int steps);
 float local_max_restart(float* map, int rows, int cols, int steps);
 
@@ -154,11 +150,13 @@ int main(int argc, char** argv) {
 
 
   // As a starting point, try to get it working with a single steps value
-  int steps = 1028;
-  float max_val = random_walk(map, rows, cols, steps);
-  
-  printf("%d %d\n", rows, cols);
-  printf("Random walk max value: %f\n", max_val);
+  int steps = 1024;
+  //while(steps <= 1024) {
+    float max_val = random_walk(map, rows, cols, steps);
+    printf("%d %d\n", rows, cols);
+    printf("Random walk steps: %d, max value: %f\n", steps, max_val);
+    //steps = steps * 2;
+  //}
 
   return 0;
 }
