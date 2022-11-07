@@ -4,7 +4,7 @@
 #include <curand_kernel.h>
 #include "utils.h"
 
-#define N_THREADS 16
+#define N_THREADS 1024
 #define N_BLOCKS 16
 
 /*** GPU functions ***/
@@ -32,17 +32,25 @@ __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int*
     //printf("here %d\n", randNum);
     switch (randIdx) {
       case 0:
-        y = y - 1;
+        if (y != 0) {
+          y = y - 1;
+        }
         break;
       case 1:
-        x = x - 1;
+        if (x != 0) {
+          x = x - 1;
+        }
         break;
       case 2:
+        if (y < 6113) {
         y = y + 1;
         break;
+        }
       case 3:
+      if (x < 2047) {
         x = x + 1;
         break;
+      }
     }
     idx = x * 6114 + y;
     float height = map[idx];
@@ -146,7 +154,7 @@ int main(int argc, char** argv) {
 
 
   // As a starting point, try to get it working with a single steps value
-  int steps = 1;
+  int steps = 1028;
   float max_val = random_walk(map, rows, cols, steps);
   
   printf("%d %d\n", rows, cols);
