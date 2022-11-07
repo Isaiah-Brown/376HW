@@ -84,8 +84,7 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
   float max_height = map[idx];
   bx[tid] = x;
   by[tid] = y;
-
-  //printf("%f\n", max_height);
+  
   for(int i = 0; i < steps; i++) {
     //float randNum = curand_uniform(&state[tid]);
     //int randIdx = int(4 * randNum);
@@ -144,7 +143,6 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
       max_height = currMax;
       bx[tid] = x;
       by[tid] = y;
-      printf("max height %f\n", max_height);
     }
   }
  
