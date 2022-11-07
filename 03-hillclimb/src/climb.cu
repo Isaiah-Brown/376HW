@@ -4,8 +4,8 @@
 #include <curand_kernel.h>
 #include "utils.h"
 
-#define N_THREADS 1
-#define N_BLOCKS 1
+#define N_THREADS 1024
+#define N_BLOCKS 16
 
 /*** GPU functions ***/
 __global__ void init_rand_kernel(curandState *state) {
@@ -19,7 +19,7 @@ __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int*
   float start = curand_uniform(&state[tid]);
   int idx = start * rows * cols;
   int x = idx / cols;
-  int y = (idx - 1) % cols;
+  int y = idx % cols;
 
   float max_height = map[idx];
   bx[tid] = x;
@@ -31,23 +31,32 @@ __global__ void random_walk_kernel(float *map, int rows, int cols, int* bx, int*
   
     switch (randIdx) {
       case 0:
-        if (y != 0) {
+        if (y != 0) { //left
           y = y - 1;
-        }
-        break;
-      case 1:
-        if (x != 0) {
+        } else if (x != 0) {
           x = x - 1;
         }
         break;
-      case 2:
-        if (y < 6113) {
-        y = y + 1;
-        break;
+      case 1:
+        if (x != 0) {  //top
+          x = x - 1;
+        } else if (y != 0) {
+            y = y - 1;
         }
+        break;
+      case 2:
+        if (y != (cols - 1)) { //right
+          y = y + 1;
+        } else if (x != (rows - 1)) {
+          x = x + 1;
+        }
+        break;
       case 3:
-      if (x < 2047) {
+      if (x != (rows - 1)) { //bottom
         x = x + 1;
+        break;
+      } else if (y != (cols - 1)) {
+            y = y + 1;
         break;
       }
     }
@@ -195,13 +204,12 @@ float random_walk(float* map, int rows, int cols, int steps) {
   }
 
   // Finally: free used GPU and CPU memory
-  //cudaFree(d_state);
-  //cudaFree(d_map);
-  //cudaFree(d_bx);
-  //cudaFree(d_by);
-  //free(map);
-  //free(bx);
-  //free(by);
+  cudaFree(d_state);
+  cudaFree(d_map);
+  cudaFree(d_bx);
+  cudaFree(d_by);
+  free(bx);
+  free(by);
   return max_val;
 }
 
@@ -248,7 +256,6 @@ float local_max(float* map, int rows, int cols, int steps){
   //cudaFree(d_map);
   //cudaFree(d_bx);
   //cudaFree(d_by);
-  //free(map);
   //free(bx);
   //free(by);
   return max_val;
@@ -269,13 +276,14 @@ int main(int argc, char** argv) {
 
 
   // As a starting point, try to get it working with a single steps value
-  int steps = 1000;
-  //while(steps <= 1024) {
-    float max_val = local_max(map, rows, cols, steps);
+  int steps = 1;
+  while(steps <= 1024) {
+    float max_val = random_walk(map, rows, cols, steps);
     //printf("%d %d\n", rows, cols);
     printf("Local Max steps: %d, max value: %f\n", steps, max_val);
-    //steps = steps * 2;
-  //}
+    steps = steps * 2;
+  }
+  free(map);
 
   return 0;
 }
