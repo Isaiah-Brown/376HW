@@ -196,7 +196,7 @@ float random_walk(float* map, int rows, int cols, int steps) {
   for(int i = 0; i < N_BLOCKS * N_THREADS; i++) {
     int x = bx[i];
     int y = by[i];
-    int idx = x * 6114 + y + 1;
+    int idx = x * 6114 + y;
     float height = map[idx];
     if (height > max_val) {
       max_val = height;
