@@ -90,14 +90,14 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
     float left, top, right, bottom; //initalize floats for the pixels to the left, right, etc of the current pixel
 
     if (y != 0) { //y = y - 1;
-      int leftIdx = (x * cols) + y - 1;
+      int leftIdx = (x * 6114) + y - 1;
       left = map[leftIdx];
     } else {
       left = -99;
     }
 
     if (x != 0) {   //x = x - 1;
-      int topIdx = ((x - 1) * cols) + y;
+      int topIdx = ((x - 1) * 6114) + y;
       top = map[topIdx];
     } else {
       top = -99;
@@ -105,7 +105,7 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
        
      
     if (y != (cols -1)) {  //y = y + 1;
-      int rightIdx = (x * cols) + y + 1;
+      int rightIdx = (x * 6114) + y + 1;
       right = map[rightIdx];
       
     } else {
@@ -113,7 +113,7 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
     }
     
     if (x != (rows - 1)) {  //x = x + 1;
-      int bottomIdx = ((x + 1) * cols) + y;
+      int bottomIdx = ((x + 1) * 6114) + y;
       bottom = map[bottomIdx];
     } else {
       bottom = -99;
@@ -130,7 +130,7 @@ __global__ void local_max_kernel(float *map, int rows, int cols, int* bx, int* b
     }
 
     int currMaxIdx = x * 6114 + y; 
-    float currMax = map[currMaxIdx]; //map value at the best index
+    float currMax = map[currMaxIdx]; //map value at the best
     
     if (currMax > max_height) {
       max_height = currMax;
@@ -162,7 +162,7 @@ __global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx
 
     
     if (y != 0) {
-      int leftIdx = (x * cols) + y - 1;
+      int leftIdx = (x * 6114) + y - 1;
       left = map[leftIdx];
       //y = y - 1;
     } else {
@@ -170,7 +170,7 @@ __global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx
     }
 
     if (x != 0) {
-      int topIdx = ((x - 1) * cols) + y;
+      int topIdx = ((x - 1) * 6114) + y;
       top = map[topIdx];
       //x = x - 1;
     } else {
@@ -179,7 +179,7 @@ __global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx
        
      
     if (y != (cols -1)) {
-      int rightIdx = (x * cols) + y + 1;
+      int rightIdx = (x * 6114) + y + 1;
       right = map[rightIdx];
       //y = y + 1;
       
@@ -188,7 +188,7 @@ __global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx
     }
     
     if (x != (rows - 1)) {
-      int bottomIdx = ((x + 1) * cols) + y;
+      int bottomIdx = ((x + 1) * 6114) + y;
       bottom = map[bottomIdx];
       //x = x + 1;
     } else {
@@ -207,7 +207,7 @@ __global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx
 
     int currMaxIdx = x * 6114 + y;
     float currMax = map[currMaxIdx];
-    last_max = last_max + 1;    //add a step since last max
+    last_max = last_max + 1;    //add a step since last max was found
     
     if (currMax > max_height) {
       last_max = 0;
@@ -216,7 +216,7 @@ __global__ void local_max_restart_kernel(float *map, int rows, int cols, int* bx
       by[tid] = y;
     }
 
-    if (last_max > 4) { //get a new index
+    if (last_max > 4) { //create new index!!
       float newStart = curand_uniform(&state[tid]);
       int newIdx = newStart * rows * cols;
       x = newIdx / cols;
@@ -394,7 +394,6 @@ int main(int argc, char** argv) {
   int steps = 1;
   while(steps <= 1024) {
     float max_val = local_max_restart(map, rows, cols, steps);
-    //printf("%d %d\n", rows, cols);
     printf("with reset: %d, max value: %f\n", steps, max_val);
     steps = steps * 2;
   }
